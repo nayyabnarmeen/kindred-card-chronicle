@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      family_members: {
+        Row: {
+          birth_date: string
+          created_at: string
+          death_date: string | null
+          gender: string | null
+          id: string
+          is_deceased: boolean | null
+          is_head: boolean | null
+          name: string
+          parent_id: string | null
+          photo_url: string | null
+          relation: string | null
+          spouse_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          birth_date: string
+          created_at?: string
+          death_date?: string | null
+          gender?: string | null
+          id?: string
+          is_deceased?: boolean | null
+          is_head?: boolean | null
+          name: string
+          parent_id?: string | null
+          photo_url?: string | null
+          relation?: string | null
+          spouse_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          birth_date?: string
+          created_at?: string
+          death_date?: string | null
+          gender?: string | null
+          id?: string
+          is_deceased?: boolean | null
+          is_head?: boolean | null
+          name?: string
+          parent_id?: string | null
+          photo_url?: string | null
+          relation?: string | null
+          spouse_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_members_spouse_id_fkey"
+            columns: ["spouse_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
