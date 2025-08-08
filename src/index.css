@@ -2,6 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --primary: 220 14% 20%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 46%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 220 9% 46%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 14% 20%;
+    --background: 0 0% 100%;
+    --foreground: 220 14% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 14% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 14% 20%;
+    
+    /* Elegant family tree colors */
+    --family-primary: 202 100% 47%;
+    --family-primary-soft: 202 100% 85%;
+    --family-accent: 310 40% 70%;
+    --family-accent-soft: 310 40% 95%;
+    --family-success: 142 76% 36%;
+    --family-success-soft: 142 76% 90%;
+    --family-warning: 45 93% 47%;
+    --family-warning-soft: 45 93% 90%;
+    
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--family-primary)), hsl(var(--family-accent)));
+    --gradient-soft: linear-gradient(135deg, hsl(var(--family-primary-soft)), hsl(var(--family-accent-soft)));
+    
+    /* Shadow definitions */
+    --shadow-elegant: 0 4px 12px -2px hsl(var(--family-primary) / 0.15);
+    --shadow-card: 0 2px 8px -2px hsl(220 14% 20% / 0.1);
+  }
+
+  .dark {
+    --primary: 210 40% 98%;
+    --primary-foreground: 220 14% 20%;
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 9% 63%;
+    --accent: 220 14% 14%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 20%;
+    --input: 220 13% 20%;
+    --ring: 220 14% 80%;
+    --background: 220 14% 11%;
+    --foreground: 210 40% 98%;
+    --card: 220 14% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 14% 11%;
+    --popover-foreground: 210 40% 98%;
+    
+    --family-primary: 202 100% 60%;
+    --family-primary-soft: 202 100% 20%;
+    --family-accent: 310 40% 80%;
+    --family-accent-soft: 310 40% 25%;
+    --family-success: 142 76% 50%;
+    --family-success-soft: 142 76% 20%;
+    --family-warning: 45 93% 60%;
+    --family-warning-soft: 45 93% 20%;
+  }
+}
+
+.gradient-bg {
+  background: var(--gradient-primary);
+}
+
+.gradient-soft-bg {
+  background: var(--gradient-soft);
+}
+
+.shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

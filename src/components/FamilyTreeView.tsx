@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FamilyTree, FamilyMember } from "@/types/family";
+import { FamilyTree, FamilyMember as OldFamilyMember } from "@/types/family";
 import { FamilyHeadCard } from "./FamilyHeadCard";
 import { FamilyMemberNode } from "./FamilyMemberNode";
 import { MobileFamilyMemberForm } from "./MobileFamilyMemberForm";
@@ -7,6 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Plus, UserPlus } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+
+interface FamilyMember {
+  id?: string;
+  name: string;
+  gender?: 'male' | 'female';
+  birth_date: string;
+  is_deceased: boolean;
+  death_date?: string;
+  relation?: 'father' | 'mother' | 'son' | 'daughter' | 'spouse' | 'head';
+  parent_id?: string;
+  spouse_id?: string;
+  is_head: boolean;
+  photo_url?: string;
+}
 
 interface FamilyTreeViewProps {
   familyTrees: FamilyTree[];

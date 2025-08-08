@@ -110,10 +110,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="manage" className="animate-fade-in px-4 pt-4">
-            <MobileManageFamilyTab
-              familyTrees={familyTrees}
-              onUpdateFamilyTrees={setFamilyTrees}
-            />
+            <MobileManageFamilyTab />
           </TabsContent>
         </Tabs>
       </div>
