@@ -295,6 +295,7 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           setEditingMember(null);
         }}
         isVisible={showForm}
+        existingMembers={familyMembers}
       />
     </div>
   );

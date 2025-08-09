@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { X, Save, Heart, HeartCrack } from "lucide-react";
+import { X, Save, Heart, HeartCrack, UserPlus } from "lucide-react";
 
 interface FamilyMember {
   id?: string;
@@ -28,13 +28,15 @@ interface MobileFamilyMemberFormProps {
   onSave: (member: FamilyMember) => void;
   onCancel: () => void;
   isVisible: boolean;
+  existingMembers?: FamilyMember[];
 }
 
 export const MobileFamilyMemberForm = ({ 
   member, 
   onSave, 
   onCancel, 
-  isVisible 
+  isVisible,
+  existingMembers = []
 }: MobileFamilyMemberFormProps) => {
   const [formData, setFormData] = useState<FamilyMember>({
     id: member?.id || '',
@@ -51,7 +53,17 @@ export const MobileFamilyMemberForm = ({
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const [relationStep, setRelationStep] = useState<'relation' | 'selection'>('relation');
+  const [selectedRelationType, setSelectedRelationType] = useState<string>('');
   const { toast } = useToast();
+
+  // Reset relation step when form opens/closes
+  useEffect(() => {
+    if (isVisible) {
+      setRelationStep('relation');
+      setSelectedRelationType('');
+    }
+  }, [isVisible]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,21 +173,85 @@ export const MobileFamilyMemberForm = ({
                 <Label htmlFor="relation" className="text-sm font-medium text-slate-700">
                   Relation
                 </Label>
-                <Select value={formData.relation} onValueChange={(value: any) => 
-                  setFormData(prev => ({ ...prev, relation: value }))
-                }>
-                  <SelectTrigger className="h-12 text-base border-slate-200">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="head">Head</SelectItem>
-                    <SelectItem value="father">Father</SelectItem>
-                    <SelectItem value="mother">Mother</SelectItem>
-                    <SelectItem value="son">Son</SelectItem>
-                    <SelectItem value="daughter">Daughter</SelectItem>
-                    <SelectItem value="spouse">Spouse</SelectItem>
-                  </SelectContent>
-                </Select>
+                {relationStep === 'relation' ? (
+                  <Select value={formData.relation} onValueChange={(value: any) => {
+                    setFormData(prev => ({ ...prev, relation: value }));
+                    if (['spouse', 'son', 'daughter', 'father', 'mother'].includes(value)) {
+                      setSelectedRelationType(value);
+                      setRelationStep('selection');
+                    }
+                  }}>
+                    <SelectTrigger className="h-12 text-base border-slate-200">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="head">Head</SelectItem>
+                      <SelectItem value="father">Father</SelectItem>
+                      <SelectItem value="mother">Mother</SelectItem>
+                      <SelectItem value="son">Son</SelectItem>
+                      <SelectItem value="daughter">Daughter</SelectItem>
+                      <SelectItem value="spouse">Spouse</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <span className="text-sm font-medium text-blue-900 capitalize">
+                        {selectedRelationType} relationship
+                      </span>
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setRelationStep('relation')}
+                        className="h-6 px-2 text-xs text-blue-600 hover:bg-blue-100"
+                      >
+                        Change
+                      </Button>
+                    </div>
+                    
+                    <Select value={formData.parent_id || formData.spouse_id || ''} onValueChange={(value) => {
+                      if (selectedRelationType === 'spouse') {
+                        setFormData(prev => ({ ...prev, spouse_id: value, parent_id: '' }));
+                      } else {
+                        setFormData(prev => ({ ...prev, parent_id: value, spouse_id: '' }));
+                      }
+                    }}>
+                      <SelectTrigger className="h-12 text-base border-slate-200">
+                        <SelectValue placeholder={`Select ${selectedRelationType === 'spouse' ? 'spouse' : 'parent'} or create new`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">
+                          <div className="flex items-center gap-2">
+                            <UserPlus className="w-4 h-4" />
+                            Create new member
+                          </div>
+                        </SelectItem>
+                        {existingMembers
+                          .filter(m => {
+                            if (selectedRelationType === 'spouse') {
+                              return m.gender !== formData.gender; // Different gender for spouse
+                            }
+                            if (selectedRelationType === 'son' || selectedRelationType === 'daughter') {
+                              return m.relation === 'head' || m.relation === 'father' || m.relation === 'mother';
+                            }
+                            if (selectedRelationType === 'father') {
+                              return m.gender === 'male' && (m.relation === 'head' || m.relation === 'father');
+                            }
+                            if (selectedRelationType === 'mother') {
+                              return m.gender === 'female' && (m.relation === 'head' || m.relation === 'mother');
+                            }
+                            return true;
+                          })
+                          .map(member => (
+                            <SelectItem key={member.id} value={member.id || ''}>
+                              {member.name} ({member.relation})
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </div>
 

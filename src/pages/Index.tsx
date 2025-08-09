@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FamilyTreeView } from "@/components/FamilyTreeView";
 import { MobileManageFamilyTab } from "@/components/MobileManageFamilyTab";
+import { ConnectedFamilyTree } from "@/components/ConnectedFamilyTree";
 import { FamilyTree } from "@/types/family";
-import { TreePine, Users } from "lucide-react";
+import { TreePine, Users, GitBranch } from "lucide-react";
 
 const Index = () => {
   const [familyTrees, setFamilyTrees] = useState<FamilyTree[]>([
@@ -91,7 +92,7 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="tree" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 m-4 mb-0">
+          <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
             <TabsTrigger value="tree" className="gap-2 text-xs">
               <TreePine className="w-4 h-4" />
               Male Heads
@@ -99,6 +100,10 @@ const Index = () => {
             <TabsTrigger value="manage" className="gap-2 text-xs">
               <Users className="w-4 h-4" />
               All Family
+            </TabsTrigger>
+            <TabsTrigger value="connected" className="gap-2 text-xs">
+              <GitBranch className="w-4 h-4" />
+              Connected
             </TabsTrigger>
           </TabsList>
 
@@ -111,6 +116,10 @@ const Index = () => {
 
           <TabsContent value="manage" className="animate-fade-in px-4 pt-4">
             <MobileManageFamilyTab />
+          </TabsContent>
+
+          <TabsContent value="connected" className="animate-fade-in px-4 pt-4">
+            <ConnectedFamilyTree />
           </TabsContent>
         </Tabs>
       </div>
