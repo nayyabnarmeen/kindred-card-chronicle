@@ -83,7 +83,7 @@ const Index = () => {
         {/* Mobile Header */}
         <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b px-4 py-3">
           <div className="flex items-center gap-3">
-            <TreePine className="w-6 h-6 text-primary" />
+            <TreePine className="w-6 h-6 text-black" />
             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Family Tree
             </h1>

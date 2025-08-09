@@ -64,19 +64,9 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
     try {
       setIsLoading(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to add family members.",
-          variant: "destructive"
-        });
-        return;
-      }
-
       const dataToSave = {
         ...memberData,
-        user_id: user.id,
+        user_id: null, // Allow anonymous usage
         death_date: memberData.is_deceased ? memberData.death_date : null
       };
 

@@ -4,7 +4,7 @@ import { FamilyHeadCard } from "./FamilyHeadCard";
 import { FamilyMemberNode } from "./FamilyMemberNode";
 import { MobileFamilyMemberForm } from "./MobileFamilyMemberForm";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus, UserPlus, Users } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,8 +48,8 @@ export const FamilyTreeView = ({
 
   const organizeFamily = (members: FamilyMember[], headId: string) => {
     const head = members.find(m => m.id === headId);
-    const spouse = members.find(m => m.spouseId === headId);
-    const children = members.filter(m => m.parentId === headId);
+    const spouse = members.find(m => m.spouse_id === headId);
+    const children = members.filter(m => m.parent_id === headId);
     
     return { head, spouse, children };
   };
@@ -94,15 +94,15 @@ export const FamilyTreeView = ({
       const newMember = {
         ...memberData,
         id: crypto.randomUUID(),
-        isHead: true,
+        is_head: true,
         relation: "head" as const,
       } as FamilyMember;
 
       const newFamilyTree: FamilyTree = {
         id: crypto.randomUUID(),
-        headId: newMember.id,
+        headId: newMember.id!,
         name: `${newMember.name} Family`,
-        members: [newMember]
+        members: [newMember as any]
       };
       
       onUpdateFamilyTrees([...familyTrees, newFamilyTree]);
@@ -119,8 +119,16 @@ export const FamilyTreeView = ({
   return (
     <div className="space-y-4 pb-20">
       <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4">
-        <h2 className="text-xl font-semibold">Male Family Heads</h2>
-        <Button onClick={() => setShowForm(true)} className="gap-2 h-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Male Family Heads</h2>
+            <p className="text-sm text-slate-600">View-only family trees</p>
+          </div>
+        </div>
+        <Button onClick={() => setShowForm(true)} className="gradient-bg hover:opacity-90 transition-opacity shadow-elegant gap-2 h-10">
           <Plus className="w-4 h-4" />
           Add Head
         </Button>
@@ -137,7 +145,7 @@ export const FamilyTreeView = ({
             if (!headMember) return null;
 
             const isExpanded = expandedFamilies.has(familyTree.id);
-            const { head, spouse, children } = organizeFamily(familyTree.members, familyTree.headId);
+            const { head, spouse, children } = organizeFamily(familyTree.members as any[], familyTree.headId);
 
             return (
               <div key={familyTree.id} className="space-y-3">
@@ -155,18 +163,20 @@ export const FamilyTreeView = ({
                       <div className="grid grid-cols-1 gap-3 mb-4">
                         {head && (
                           <FamilyMemberNode
-                            member={head}
-                            onEdit={handleEditMember}
-                            onDelete={handleDeleteMember}
+                            member={head as any}
+                            onEdit={() => {}}
+                            onDelete={() => {}}
                             level={0}
+                            viewOnly={true}
                           />
                         )}
                         {spouse && (
                           <FamilyMemberNode
-                            member={spouse}
-                            onEdit={handleEditMember}
-                            onDelete={handleDeleteMember}
+                            member={spouse as any}
+                            onEdit={() => {}}
+                            onDelete={() => {}}
                             level={0}
+                            viewOnly={true}
                           />
                         )}
                       </div>
@@ -184,10 +194,11 @@ export const FamilyTreeView = ({
                           {children.map((child) => (
                             <FamilyMemberNode
                               key={child.id}
-                              member={child}
-                              onEdit={handleEditMember}
-                              onDelete={handleDeleteMember}
+                              member={child as any}
+                              onEdit={() => {}}
+                              onDelete={() => {}}
                               level={1}
+                              viewOnly={true}
                             />
                           ))}
                         </div>

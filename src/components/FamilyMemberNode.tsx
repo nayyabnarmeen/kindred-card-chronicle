@@ -8,9 +8,10 @@ interface FamilyMemberNodeProps {
   onEdit: (member: FamilyMember) => void;
   onDelete: (memberId: string) => void;
   level: number;
+  viewOnly?: boolean;
 }
 
-export const FamilyMemberNode = ({ member, onEdit, onDelete, level }: FamilyMemberNodeProps) => {
+export const FamilyMemberNode = ({ member, onEdit, onDelete, level, viewOnly = false }: FamilyMemberNodeProps) => {
   const getRelationColor = (relation: string) => {
     switch (relation) {
       case 'father':
@@ -40,30 +41,32 @@ export const FamilyMemberNode = ({ member, onEdit, onDelete, level }: FamilyMemb
               <p className="text-xs text-muted-foreground">{member.birthDate}</p>
             )}
           </div>
-          <div className="flex space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(member);
-              }}
-              className="h-8 w-8 p-0 hover:bg-primary/20"
-            >
-              <Edit className="w-3 h-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(member.id);
-              }}
-              className="h-8 w-8 p-0 hover:bg-destructive/20 text-destructive"
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
+          {!viewOnly && (
+            <div className="flex space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(member);
+                }}
+                className="h-8 w-8 p-0 hover:bg-primary/20"
+              >
+                <Edit className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(member.id);
+                }}
+                className="h-8 w-8 p-0 hover:bg-destructive/20 text-destructive"
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
