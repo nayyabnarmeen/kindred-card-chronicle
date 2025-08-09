@@ -3,7 +3,7 @@ export interface FamilyMember {
   name: string;
   gender: 'male' | 'female';
   birthDate?: string;
-  relation: 'father' | 'mother' | 'son' | 'daughter' | 'spouse' | 'head';
+  relation: string; // Allow multiple relations like "head,father,husband"
   parentId?: string;
   spouseId?: string;
   isHead: boolean;

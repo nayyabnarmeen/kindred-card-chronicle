@@ -15,7 +15,7 @@ interface FamilyMember {
   birth_date: string;
   is_deceased: boolean;
   death_date?: string;
-  relation?: 'father' | 'mother' | 'son' | 'daughter' | 'spouse' | 'head';
+  relation?: string; // Allow multiple relations like "head,father,husband"
   parent_id?: string;
   spouse_id?: string;
   is_head: boolean;
@@ -95,7 +95,7 @@ export const FamilyTreeView = ({
         ...memberData,
         id: crypto.randomUUID(),
         is_head: true,
-        relation: "head" as const,
+        relation: "head",
       } as FamilyMember;
 
       const newFamilyTree: FamilyTree = {

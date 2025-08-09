@@ -16,7 +16,7 @@ interface FamilyMember {
   birth_date: string;
   is_deceased: boolean;
   death_date?: string;
-  relation?: 'father' | 'mother' | 'son' | 'daughter' | 'spouse' | 'head';
+  relation?: string; // Allow multiple relations like "head,father,husband"
   parent_id?: string;
   spouse_id?: string;
   is_head: boolean;
@@ -191,6 +191,10 @@ export const MobileFamilyMemberForm = ({
                       <SelectItem value="son">Son</SelectItem>
                       <SelectItem value="daughter">Daughter</SelectItem>
                       <SelectItem value="spouse">Spouse</SelectItem>
+                      <SelectItem value="head,father,spouse">Head & Father & Husband</SelectItem>
+                      <SelectItem value="head,mother,spouse">Head & Mother & Wife</SelectItem>
+                      <SelectItem value="father,spouse">Father & Husband</SelectItem>
+                      <SelectItem value="mother,spouse">Mother & Wife</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (

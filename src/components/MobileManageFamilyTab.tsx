@@ -14,7 +14,7 @@ interface FamilyMember {
   birth_date: string;
   is_deceased: boolean;
   death_date?: string;
-  relation?: 'father' | 'mother' | 'son' | 'daughter' | 'spouse' | 'head';
+  relation?: string; // Allow multiple relations like "head,father,husband"
   parent_id?: string;
   spouse_id?: string;
   is_head: boolean;
@@ -67,7 +67,9 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
       const dataToSave = {
         ...memberData,
         user_id: null, // Allow anonymous usage
-        death_date: memberData.is_deceased ? memberData.death_date : null
+        death_date: memberData.is_deceased ? memberData.death_date : null,
+        parent_id: memberData.parent_id || null,
+        spouse_id: memberData.spouse_id || null
       };
 
       if (editingMember?.id) {
