@@ -92,15 +92,15 @@ const Index = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="tree" className="w-full">
+        <Tabs defaultValue="manage" className="w-full">
           <TabsList className="grid w-full grid-cols-4 m-4 mb-0">
-            <TabsTrigger value="tree" className="gap-2 text-xs">
-              <TreePine className="w-4 h-4" />
-              Male Heads
-            </TabsTrigger>
             <TabsTrigger value="manage" className="gap-2 text-xs">
               <Users className="w-4 h-4" />
               All Family
+            </TabsTrigger>
+            <TabsTrigger value="tree" className="gap-2 text-xs">
+              <TreePine className="w-4 h-4" />
+              Heads
             </TabsTrigger>
             <TabsTrigger value="connected" className="gap-2 text-xs">
               <GitBranch className="w-4 h-4" />
@@ -108,7 +108,7 @@ const Index = () => {
             </TabsTrigger>
             <TabsTrigger value="grandparents" className="gap-2 text-xs">
               <Users className="w-4 h-4" />
-              Grandparents
+              Families
             </TabsTrigger>
           </TabsList>
 

@@ -113,7 +113,7 @@ export const GrandparentsTab = () => {
           <Users className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Grandparents & Families</h2>
+          <h2 className="text-xl font-semibold text-slate-900">Families</h2>
           <p className="text-sm text-slate-600">
             {grandparents.length} grandparent{grandparents.length !== 1 ? 's' : ''}
           </p>
