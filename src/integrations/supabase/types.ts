@@ -23,9 +23,11 @@ export type Database = {
           id: string
           is_deceased: boolean | null
           is_head: boolean | null
+          marriage_date: string | null
           name: string
           parent_id: string | null
           photo_url: string | null
+          picture_url: string | null
           relation: string | null
           spouse_id: string | null
           updated_at: string
@@ -39,9 +41,11 @@ export type Database = {
           id?: string
           is_deceased?: boolean | null
           is_head?: boolean | null
+          marriage_date?: string | null
           name: string
           parent_id?: string | null
           photo_url?: string | null
+          picture_url?: string | null
           relation?: string | null
           spouse_id?: string | null
           updated_at?: string
@@ -55,9 +59,11 @@ export type Database = {
           id?: string
           is_deceased?: boolean | null
           is_head?: boolean | null
+          marriage_date?: string | null
           name?: string
           parent_id?: string | null
           photo_url?: string | null
+          picture_url?: string | null
           relation?: string | null
           spouse_id?: string | null
           updated_at?: string

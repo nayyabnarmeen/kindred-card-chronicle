@@ -19,6 +19,8 @@ interface FamilyMember {
   spouse_id?: string;
   is_head: boolean;
   photo_url?: string;
+  marriage_date?: string;
+  picture_url?: string;
 }
 
 interface MobileManageFamilyTabProps {
@@ -68,8 +70,10 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
         ...memberData,
         user_id: null, // Allow anonymous usage
         death_date: memberData.is_deceased ? memberData.death_date : null,
-        parent_id: memberData.parent_id || null,
-        spouse_id: memberData.spouse_id || null
+        parent_id: memberData.parent_id === '' ? null : memberData.parent_id,
+        spouse_id: memberData.spouse_id === '' ? null : memberData.spouse_id,
+        marriage_date: memberData.marriage_date === '' ? null : memberData.marriage_date,
+        picture_url: memberData.picture_url === '' ? null : memberData.picture_url
       };
 
       if (editingMember?.id) {

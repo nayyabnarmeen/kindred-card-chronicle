@@ -21,6 +21,8 @@ interface FamilyMember {
   spouse_id?: string;
   is_head: boolean;
   photo_url?: string;
+  marriage_date?: string;
+  picture_url?: string;
 }
 
 interface MobileFamilyMemberFormProps {
@@ -49,7 +51,9 @@ export const MobileFamilyMemberForm = ({
     parent_id: member?.parent_id || '',
     spouse_id: member?.spouse_id || '',
     is_head: member?.is_head || false,
-    photo_url: member?.photo_url || ''
+    photo_url: member?.photo_url || '',
+    marriage_date: member?.marriage_date || '',
+    picture_url: member?.picture_url || ''
   });
   
   const [isLoading, setIsLoading] = useState(false);
@@ -307,6 +311,33 @@ export const MobileFamilyMemberForm = ({
                   />
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="marriage_date" className="text-sm font-medium text-slate-700">
+                Marriage Date (Optional)
+              </Label>
+              <Input
+                id="marriage_date"
+                type="date"
+                value={formData.marriage_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, marriage_date: e.target.value }))}
+                className="h-12 text-base border-slate-200 focus:border-blue-300 focus:ring-blue-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="picture_url" className="text-sm font-medium text-slate-700">
+                Picture URL (Optional)
+              </Label>
+              <Input
+                id="picture_url"
+                type="url"
+                value={formData.picture_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, picture_url: e.target.value }))}
+                placeholder="https://example.com/photo.jpg"
+                className="h-12 text-base border-slate-200 focus:border-blue-300 focus:ring-blue-200"
+              />
             </div>
 
             <div className="flex gap-3 pt-2">
