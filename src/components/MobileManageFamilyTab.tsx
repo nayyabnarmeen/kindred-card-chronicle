@@ -6,6 +6,7 @@ import { MobileFamilyMemberForm } from "./MobileFamilyMemberForm";
 import { Plus, Users, Edit, Trash2, UserPlus, Heart, Calendar, HeartCrack } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FamilyMember {
   id?: string;
@@ -33,6 +34,7 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchFamilyMembers();
@@ -40,10 +42,19 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
 
   const fetchFamilyMembers = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('family_members')
         .select('*')
         .order('created_at', { ascending: true });
+
+      // If user is authenticated, filter by user_id, otherwise show sample data
+      if (user) {
+        query = query.eq('user_id', user.id);
+      } else {
+        query = query.is('user_id', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       // Type assertion to match our interface
@@ -68,7 +79,7 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
       
       const dataToSave = {
         ...memberData,
-        user_id: null, // Allow anonymous usage
+        user_id: user?.id || null, // Use authenticated user's ID if available
         death_date: memberData.is_deceased ? memberData.death_date : null,
         parent_id: memberData.parent_id === '' ? null : memberData.parent_id,
         spouse_id: memberData.spouse_id === '' ? null : memberData.spouse_id,
