@@ -77,9 +77,8 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
     try {
       setIsLoading(true);
       
-      // Ensure required fields are properly formatted
-      const dataToSave = {
-        ...memberData,
+      // Prepare data for Supabase - remove empty id field for new members
+      const dataToSave: any = {
         user_id: user?.id || null,
         name: memberData.name.trim(),
         birth_date: memberData.birth_date,
@@ -94,6 +93,11 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
         gender: memberData.gender || 'male',
         relation: memberData.relation || 'head'
       };
+
+      // Don't include id field for new members - let database generate it
+      if (editingMember?.id) {
+        dataToSave.id = editingMember.id;
+      }
 
       console.log('Saving family member data:', dataToSave);
 
@@ -125,10 +129,13 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           description: `${memberData.name}'s information has been updated.`,
         });
       } else {
-        // Add new member
+        // Add new member - don't include id in insert
+        const insertData = { ...dataToSave };
+        delete insertData.id; // Remove id field entirely for new inserts
+        
         const { data, error } = await supabase
           .from('family_members')
-          .insert([dataToSave])
+          .insert([insertData])
           .select()
           .single();
 
