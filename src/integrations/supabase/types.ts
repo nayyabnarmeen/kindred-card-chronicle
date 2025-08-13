@@ -19,16 +19,22 @@ export type Database = {
           birth_date: string
           created_at: string
           death_date: string | null
+          ethnic: string | null
           gender: string | null
+          hometown: string | null
           id: string
           is_deceased: boolean | null
           is_head: boolean | null
           marriage_date: string | null
           name: string
+          nationality: string | null
+          note: string | null
           parent_id: string | null
           photo_url: string | null
           picture_url: string | null
+          profession: string | null
           relation: string | null
+          residence: string | null
           spouse_id: string | null
           updated_at: string
           user_id: string | null
@@ -37,16 +43,22 @@ export type Database = {
           birth_date: string
           created_at?: string
           death_date?: string | null
+          ethnic?: string | null
           gender?: string | null
+          hometown?: string | null
           id?: string
           is_deceased?: boolean | null
           is_head?: boolean | null
           marriage_date?: string | null
           name: string
+          nationality?: string | null
+          note?: string | null
           parent_id?: string | null
           photo_url?: string | null
           picture_url?: string | null
+          profession?: string | null
           relation?: string | null
+          residence?: string | null
           spouse_id?: string | null
           updated_at?: string
           user_id?: string | null
@@ -55,16 +67,22 @@ export type Database = {
           birth_date?: string
           created_at?: string
           death_date?: string | null
+          ethnic?: string | null
           gender?: string | null
+          hometown?: string | null
           id?: string
           is_deceased?: boolean | null
           is_head?: boolean | null
           marriage_date?: string | null
           name?: string
+          nationality?: string | null
+          note?: string | null
           parent_id?: string | null
           photo_url?: string | null
           picture_url?: string | null
+          profession?: string | null
           relation?: string | null
+          residence?: string | null
           spouse_id?: string | null
           updated_at?: string
           user_id?: string | null

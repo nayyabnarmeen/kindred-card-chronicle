@@ -1,28 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MobileFamilyMemberForm } from "./MobileFamilyMemberForm";
-import { Plus, Users, Edit, Trash2, UserPlus, Heart, Calendar, HeartCrack } from "lucide-react";
+import { Plus, Users, Edit, Trash2, UserPlus, Heart, Calendar, HeartCrack, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyContext, FamilyMember } from "@/contexts/FamilyContext";
 
-interface FamilyMember {
-  id?: string;
-  name: string;
-  gender?: 'male' | 'female';
-  birth_date: string;
-  is_deceased: boolean;
-  death_date?: string;
-  relation?: string; // Allow multiple relations like "head,father,husband"
-  parent_id?: string;
-  spouse_id?: string;
-  is_head: boolean;
-  photo_url?: string;
-  marriage_date?: string;
-  picture_url?: string;
-}
 
 interface MobileManageFamilyTabProps {
   onUpdateFamilyTrees?: (trees: any[]) => void;
@@ -31,51 +17,13 @@ interface MobileManageFamilyTabProps {
 export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamilyTabProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { familyMembers, isLoading, addMember, updateMember, deleteMember } = useFamilyContext();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchFamilyMembers();
-  }, []);
-
-  const fetchFamilyMembers = async () => {
-    try {
-      let query = supabase
-        .from('family_members')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      // If user is authenticated, filter by user_id, otherwise show sample data
-      if (user) {
-        query = query.eq('user_id', user.id);
-      } else {
-        query = query.is('user_id', null);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      // Type assertion to match our interface
-      setFamilyMembers((data as any[])?.map(item => ({
-        ...item,
-        gender: item.gender as 'male' | 'female'
-      })) || []);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load family members. Please refresh the page.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSaveMember = async (memberData: FamilyMember) => {
     try {
-      setIsLoading(true);
       
       // Prepare data for Supabase - remove empty id field for new members
       const dataToSave: any = {
@@ -91,7 +39,13 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
         picture_url: memberData.picture_url && memberData.picture_url !== '' ? memberData.picture_url : null,
         photo_url: memberData.photo_url && memberData.photo_url !== '' ? memberData.photo_url : null,
         gender: memberData.gender || 'male',
-        relation: memberData.relation || 'head'
+        relation: memberData.relation || 'head',
+        profession: memberData.profession && memberData.profession !== '' ? memberData.profession : null,
+        residence: memberData.residence && memberData.residence !== '' ? memberData.residence : null,
+        hometown: memberData.hometown && memberData.hometown !== '' ? memberData.hometown : null,
+        ethnic: memberData.ethnic && memberData.ethnic !== '' ? memberData.ethnic : null,
+        nationality: memberData.nationality && memberData.nationality !== '' ? memberData.nationality : null,
+        note: memberData.note && memberData.note !== '' ? memberData.note : null
       };
 
       // Don't include id field for new members - let database generate it
@@ -115,14 +69,10 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           throw error;
         }
         
-        setFamilyMembers(prev => 
-          prev.map(member => 
-            member.id === editingMember.id ? { 
-              ...data,
-              gender: data.gender as 'male' | 'female'
-            } as FamilyMember : member
-          )
-        );
+        updateMember({
+          ...data,
+          gender: data.gender as 'male' | 'female'
+        } as FamilyMember);
         
         toast({
           title: "Member Updated",
@@ -144,10 +94,10 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           throw error;
         }
         
-        setFamilyMembers(prev => [...prev, {
+        addMember({
           ...data,
           gender: data.gender as 'male' | 'female'
-        } as FamilyMember]);
+        } as FamilyMember);
         
         toast({
           title: "Member Added",
@@ -165,8 +115,6 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
         variant: "destructive"
       });
       throw error; // Re-throw to let form handle it
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -184,7 +132,7 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
 
       if (error) throw error;
       
-      setFamilyMembers(prev => prev.filter(member => member.id !== memberId));
+      deleteMember(memberId);
       
       toast({
         title: "Member Deleted",
@@ -296,6 +244,19 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
                         <span>Born: {new Date(member.birth_date).toLocaleDateString()}</span>
                       </div>
                       
+                      {member.profession && (
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span className="text-xs bg-slate-100 px-2 py-1 rounded">{member.profession}</span>
+                        </div>
+                      )}
+                      
+                      {member.residence && (
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <MapPin className="w-4 h-4" />
+                          <span>{member.residence}</span>
+                        </div>
+                      )}
+                      
                       {member.is_deceased && member.death_date && (
                         <div className="flex items-center gap-2 text-slate-500">
                           <HeartCrack className="w-4 h-4" />
@@ -339,6 +300,7 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
         }}
         isVisible={showForm}
         existingMembers={familyMembers}
+        
       />
     </div>
   );
