@@ -77,31 +77,45 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
     try {
       setIsLoading(true);
       
+      // Ensure required fields are properly formatted
       const dataToSave = {
         ...memberData,
-        user_id: user?.id || null, // Use authenticated user's ID if available
-        death_date: memberData.is_deceased ? memberData.death_date : null,
-        parent_id: memberData.parent_id === '' ? null : memberData.parent_id,
-        spouse_id: memberData.spouse_id === '' ? null : memberData.spouse_id,
-        marriage_date: memberData.marriage_date === '' ? null : memberData.marriage_date,
-        picture_url: memberData.picture_url === '' ? null : memberData.picture_url
+        user_id: user?.id || null,
+        name: memberData.name.trim(),
+        birth_date: memberData.birth_date,
+        is_deceased: Boolean(memberData.is_deceased),
+        is_head: Boolean(memberData.is_head),
+        death_date: memberData.is_deceased && memberData.death_date ? memberData.death_date : null,
+        parent_id: memberData.parent_id && memberData.parent_id !== '' && memberData.parent_id !== 'new' ? memberData.parent_id : null,
+        spouse_id: memberData.spouse_id && memberData.spouse_id !== '' && memberData.spouse_id !== 'new' ? memberData.spouse_id : null,
+        marriage_date: memberData.marriage_date && memberData.marriage_date !== '' ? memberData.marriage_date : null,
+        picture_url: memberData.picture_url && memberData.picture_url !== '' ? memberData.picture_url : null,
+        photo_url: memberData.photo_url && memberData.photo_url !== '' ? memberData.photo_url : null,
+        gender: memberData.gender || 'male',
+        relation: memberData.relation || 'head'
       };
+
+      console.log('Saving family member data:', dataToSave);
 
       if (editingMember?.id) {
         // Update existing member
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('family_members')
           .update(dataToSave)
-          .eq('id', editingMember.id);
+          .eq('id', editingMember.id)
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         
         setFamilyMembers(prev => 
           prev.map(member => 
             member.id === editingMember.id ? { 
-              ...dataToSave, 
-              id: editingMember.id,
-              gender: dataToSave.gender as 'male' | 'female'
+              ...data,
+              gender: data.gender as 'male' | 'female'
             } as FamilyMember : member
           )
         );
@@ -118,7 +132,11 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        
         setFamilyMembers(prev => [...prev, {
           ...data,
           gender: data.gender as 'male' | 'female'
@@ -135,10 +153,11 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
     } catch (error) {
       console.error('Error saving family member:', error);
       toast({
-        title: "Error",
-        description: "Failed to save family member. Please try again.",
+        title: "Error", 
+        description: error instanceof Error ? error.message : "Failed to save family member. Please try again.",
         variant: "destructive"
       });
+      throw error; // Re-throw to let form handle it
     } finally {
       setIsLoading(false);
     }

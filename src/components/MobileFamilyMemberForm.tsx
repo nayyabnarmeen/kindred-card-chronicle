@@ -27,7 +27,7 @@ interface FamilyMember {
 
 interface MobileFamilyMemberFormProps {
   member?: FamilyMember;
-  onSave: (member: FamilyMember) => void;
+  onSave: (member: FamilyMember) => Promise<void>;
   onCancel: () => void;
   isVisible: boolean;
   existingMembers?: FamilyMember[];
@@ -95,16 +95,34 @@ export const MobileFamilyMemberForm = ({
     try {
       const updatedMember: FamilyMember = {
         ...formData,
-        is_head: formData.relation === 'head',
+        is_head: formData.relation === 'head' || formData.relation?.includes('head'),
         death_date: formData.is_deceased ? formData.death_date : undefined
       };
       
-      onSave(updatedMember);
-      toast({
-        title: "Success",
-        description: member ? "Family member updated successfully" : "Family member added successfully"
+      // Call onSave and await it properly
+      await onSave(updatedMember);
+      
+      // Don't show success toast here - let the parent component handle it
+      // Reset form state
+      setFormData({
+        id: '',
+        name: '',
+        gender: 'male',
+        birth_date: '',
+        is_deceased: false,
+        death_date: '',
+        relation: 'head',
+        parent_id: '',
+        spouse_id: '',
+        is_head: false,
+        photo_url: '',
+        marriage_date: '',
+        picture_url: ''
       });
+      setRelationStep('relation');
+      setSelectedRelationType('');
     } catch (error) {
+      console.error('Form submission error:', error);
       toast({
         title: "Error",
         description: "Failed to save family member. Please try again.",

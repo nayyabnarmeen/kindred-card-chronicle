@@ -73,47 +73,50 @@ export const FamilyTreeView = ({
     });
   };
 
-  const handleSaveMember = (memberData: Partial<FamilyMember>) => {
-    if (editingMember) {
-      // Update existing member
-      const updatedTrees = familyTrees.map(tree => ({
-        ...tree,
-        members: tree.members.map(member => 
-          member.id === editingMember.id 
-            ? { ...member, ...memberData }
-            : member
-        )
-      }));
-      onUpdateFamilyTrees(updatedTrees);
-      toast({
-        title: "Member Updated",
-        description: `${memberData.name}'s information has been updated.`,
-      });
-    } else {
-      // Add new member as family head
-      const newMember = {
-        ...memberData,
-        id: crypto.randomUUID(),
-        is_head: true,
-        relation: "head",
-      } as FamilyMember;
+  const handleSaveMember = async (memberData: FamilyMember): Promise<void> => {
+    return new Promise<void>((resolve) => {
+      if (editingMember) {
+        // Update existing member
+        const updatedTrees = familyTrees.map(tree => ({
+          ...tree,
+          members: tree.members.map(member => 
+            member.id === editingMember.id 
+              ? { ...member, ...memberData }
+              : member
+          )
+        }));
+        onUpdateFamilyTrees(updatedTrees);
+        toast({
+          title: "Member Updated",
+          description: `${memberData.name}'s information has been updated.`,
+        });
+      } else {
+        // Add new member as family head
+        const newMember = {
+          ...memberData,
+          id: crypto.randomUUID(),
+          is_head: true,
+          relation: "head",
+        } as FamilyMember;
 
-      const newFamilyTree: FamilyTree = {
-        id: crypto.randomUUID(),
-        headId: newMember.id!,
-        name: `${newMember.name} Family`,
-        members: [newMember as any]
-      };
+        const newFamilyTree: FamilyTree = {
+          id: crypto.randomUUID(),
+          headId: newMember.id!,
+          name: `${newMember.name} Family`,
+          members: [newMember as any]
+        };
+        
+        onUpdateFamilyTrees([...familyTrees, newFamilyTree]);
+        toast({
+          title: "Family Head Added",
+          description: `${memberData.name} has been added as a new family head.`,
+        });
+      }
       
-      onUpdateFamilyTrees([...familyTrees, newFamilyTree]);
-      toast({
-        title: "Family Head Added",
-        description: `${memberData.name} has been added as a new family head.`,
-      });
-    }
-    
-    setShowForm(false);
-    setEditingMember(null);
+      setShowForm(false);
+      setEditingMember(null);
+      resolve();
+    });
   };
 
   return (
