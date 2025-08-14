@@ -195,7 +195,8 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           </div>
           <h3 className="text-xl font-semibold text-slate-900 mb-2">Start Your Family Tree</h3>
           <p className="text-slate-600 mb-8 max-w-md mx-auto">
-            Begin documenting your family history by adding your first family member.
+            Begin documenting your family history by adding your first family member. 
+            Family heads and fathers will automatically appear in the Heads tab.
           </p>
           <Button 
             onClick={() => setShowForm(true)}
@@ -235,10 +236,16 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
                             }
                           >
                             {member.relation}
+                            {member.relation?.includes('head') && ' 👑'}
                           </Badge>
                           {member.gender && (
                             <Badge variant="outline" className="text-xs">
                               {member.gender}
+                            </Badge>
+                          )}
+                          {(member.relation?.includes('head') || member.relation?.includes('father')) && (
+                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              Visible in Heads tab
                             </Badge>
                           )}
                         </div>

@@ -1,26 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FamilyTree, FamilyMember as OldFamilyMember } from "@/types/family";
 import { FamilyHeadCard } from "./FamilyHeadCard";
 import { FamilyMemberNode } from "./FamilyMemberNode";
 import { MobileFamilyMemberForm } from "./MobileFamilyMemberForm";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, UserPlus, Users, Heart, Edit, Trash2, User, Crown } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-
-interface FamilyMember {
-  id?: string;
-  name: string;
-  gender?: 'male' | 'female';
-  birth_date: string;
-  is_deceased: boolean;
-  death_date?: string;
-  relation?: string; // Allow multiple relations like "head,father,husband"
-  parent_id?: string;
-  spouse_id?: string;
-  is_head: boolean;
-  photo_url?: string;
-}
+import { useFamilyContext, FamilyMember } from "@/contexts/FamilyContext";
 
 interface FamilyTreeViewProps {
   familyTrees: FamilyTree[];
@@ -34,7 +23,14 @@ export const FamilyTreeView = ({
   const [expandedFamilies, setExpandedFamilies] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
+  const [expandingFromHead, setExpandingFromHead] = useState<FamilyMember | null>(null);
+  const { familyMembers, updateMember, deleteMember } = useFamilyContext();
   const { toast } = useToast();
+
+  // Get family heads from context (members with head relation)
+  const familyHeads = familyMembers.filter(member => 
+    member.relation?.includes('head') || member.is_head
+  );
 
   const toggleFamily = (familyId: string) => {
     const newExpanded = new Set(expandedFamilies);
@@ -46,10 +42,10 @@ export const FamilyTreeView = ({
     setExpandedFamilies(newExpanded);
   };
 
-  const organizeFamily = (members: FamilyMember[], headId: string) => {
-    const head = members.find(m => m.id === headId);
-    const spouse = members.find(m => m.spouse_id === headId);
-    const children = members.filter(m => m.parent_id === headId);
+  const organizeFamily = (headId: string) => {
+    const head = familyMembers.find(m => m.id === headId);
+    const spouse = familyMembers.find(m => m.spouse_id === headId);
+    const children = familyMembers.filter(m => m.parent_id === headId);
     
     return { head, spouse, children };
   };
@@ -59,64 +55,54 @@ export const FamilyTreeView = ({
     setShowForm(true);
   };
 
-  const handleDeleteMember = (memberId: string) => {
-    const updatedTrees = familyTrees.map(tree => ({
-      ...tree,
-      members: tree.members.filter(member => member.id !== memberId)
-    })).filter(tree => tree.members.length > 0);
-    
-    onUpdateFamilyTrees(updatedTrees);
-    toast({
-      title: "Member Deleted",
-      description: "Family member has been removed.",
-      variant: "destructive",
-    });
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      await deleteMember(memberId);
+      toast({
+        title: "Member Deleted",
+        description: "Family member has been removed.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete member. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExpandFamily = (head: FamilyMember) => {
+    setExpandingFromHead(head);
+    setShowForm(true);
   };
 
   const handleSaveMember = async (memberData: FamilyMember): Promise<void> => {
-    return new Promise<void>((resolve) => {
-      if (editingMember) {
-        // Update existing member
-        const updatedTrees = familyTrees.map(tree => ({
-          ...tree,
-          members: tree.members.map(member => 
-            member.id === editingMember.id 
-              ? { ...member, ...memberData }
-              : member
-          )
-        }));
-        onUpdateFamilyTrees(updatedTrees);
-        toast({
-          title: "Member Updated",
-          description: `${memberData.name}'s information has been updated.`,
-        });
-      } else {
-        // Add new member as family head
-        const newMember = {
-          ...memberData,
-          id: crypto.randomUUID(),
-          is_head: true,
-          relation: "head",
-        } as FamilyMember;
+    // This will be handled by the parent component's save logic
+    // The form will call the MobileManageFamilyTab's handleSaveMember
+    return Promise.resolve();
+  };
 
-        const newFamilyTree: FamilyTree = {
-          id: crypto.randomUUID(),
-          headId: newMember.id!,
-          name: `${newMember.name} Family`,
-          members: [newMember as any]
-        };
-        
-        onUpdateFamilyTrees([...familyTrees, newFamilyTree]);
-        toast({
-          title: "Family Head Added",
-          description: `${memberData.name} has been added as a new family head.`,
-        });
-      }
-      
-      setShowForm(false);
-      setEditingMember(null);
-      resolve();
-    });
+  const handleAddFamilyMember = (headMember: FamilyMember, relationType: 'spouse' | 'child') => {
+    const newMember: Partial<FamilyMember> = {
+      name: '',
+      gender: 'male',
+      birth_date: '',
+      is_deceased: false,
+      is_head: false,
+      relation: relationType === 'spouse' ? 'spouse' : (headMember.gender === 'male' ? 'son' : 'daughter'),
+    };
+
+    if (relationType === 'spouse') {
+      newMember.spouse_id = headMember.id;
+      newMember.gender = headMember.gender === 'male' ? 'female' : 'male';
+    } else {
+      newMember.parent_id = headMember.id;
+    }
+
+    setEditingMember(newMember as FamilyMember);
+    setExpandingFromHead(headMember);
+    setShowForm(true);
   };
 
   return (
@@ -124,110 +110,207 @@ export const FamilyTreeView = ({
       <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
-            <Users className="w-5 h-5 text-white" />
+            <Crown className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Male Family Heads</h2>
-            <p className="text-sm text-slate-600">View-only family trees</p>
+            <h2 className="text-xl font-semibold text-slate-900">Family Heads</h2>
+            <p className="text-sm text-slate-600">
+              {familyHeads.length} head{familyHeads.length !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
-        <Button onClick={() => setShowForm(true)} className="gradient-bg hover:opacity-90 transition-opacity shadow-elegant gap-2 h-10">
+        <Button 
+          onClick={() => setShowForm(true)} 
+          className="gradient-bg hover:opacity-90 transition-opacity shadow-elegant gap-2 h-10"
+        >
           <Plus className="w-4 h-4" />
           Add Head
         </Button>
       </div>
 
-      <div className="space-y-3">
-        {familyTrees
-          .filter(tree => {
-            const headMember = tree.members.find(m => m.id === tree.headId);
-            return headMember?.gender === 'male';
-          })
-          .map((familyTree) => {
-            const headMember = familyTree.members.find(m => m.id === familyTree.headId);
-            if (!headMember) return null;
+      <div className="space-y-4">
+        {familyHeads.map((headMember) => {
+          const familyId = headMember.id!;
+          const isExpanded = expandedFamilies.has(familyId);
+          const { head, spouse, children } = organizeFamily(headMember.id!);
 
-            const isExpanded = expandedFamilies.has(familyTree.id);
-            const { head, spouse, children } = organizeFamily(familyTree.members as any[], familyTree.headId);
+          return (
+            <Card key={familyId} className="shadow-card border-0 overflow-hidden border-l-4 border-l-primary">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-full gradient-bg flex items-center justify-center">
+                        <Crown className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-slate-900">{headMember.name}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className="gradient-bg text-white">
+                            Family Head
+                          </Badge>
+                          {headMember.gender && (
+                            <Badge variant="outline" className="text-xs">
+                              {headMember.gender}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-slate-600 mb-3">
+                      <p>Born: {new Date(headMember.birth_date).toLocaleDateString()}</p>
+                      {headMember.profession && <p>Profession: {headMember.profession}</p>}
+                      {headMember.residence && <p>Lives in: {headMember.residence}</p>}
+                    </div>
 
-            return (
-              <div key={familyTree.id} className="space-y-3">
-                <FamilyHeadCard
-                  familyTree={familyTree}
-                  headMember={headMember}
-                  onExpand={toggleFamily}
-                  isExpanded={isExpanded}
-                />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddFamilyMember(headMember, 'spouse')}
+                        className="h-8 text-xs gap-1"
+                        disabled={!!spouse}
+                      >
+                        <Heart className="w-3 h-3" />
+                        {spouse ? 'Has Spouse' : 'Add Spouse'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddFamilyMember(headMember, 'child')}
+                        className="h-8 text-xs gap-1"
+                      >
+                        <UserPlus className="w-3 h-3" />
+                        Add Child
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleFamily(familyId)}
+                        className="h-8 text-xs"
+                      >
+                        {isExpanded ? 'Hide' : 'View'} Family ({children.length + (spouse ? 1 : 0)})
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditMember(headMember)}
+                      className="h-8 w-8 p-0 border-slate-200 text-slate-600 hover:bg-slate-50"
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteMember(headMember.id!)}
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
 
                 <Collapsible open={isExpanded}>
-                  <CollapsibleContent className="px-4 space-y-4">
-                    <div className="animate-fade-in">
-                      {/* Parents Row */}
-                      <div className="grid grid-cols-1 gap-3 mb-4">
-                        {head && (
-                          <FamilyMemberNode
-                            member={head as any}
-                            onEdit={() => {}}
-                            onDelete={() => {}}
-                            level={0}
-                            viewOnly={true}
-                          />
-                        )}
-                        {spouse && (
-                          <FamilyMemberNode
-                            member={spouse as any}
-                            onEdit={() => {}}
-                            onDelete={() => {}}
-                            level={0}
-                            viewOnly={true}
-                          />
-                        )}
-                      </div>
-
-                      {/* Connection Line */}
-                      {children.length > 0 && (
-                        <div className="flex justify-center mb-4">
-                          <div className="w-px h-6 bg-border"></div>
+                  <CollapsibleContent className="space-y-4">
+                    <div className="animate-fade-in border-t pt-4">
+                      {/* Spouse */}
+                      {spouse && (
+                        <div className="mb-4">
+                          <h5 className="text-sm font-medium text-slate-700 mb-2">Spouse</h5>
+                          <Card className="bg-slate-50">
+                            <CardContent className="p-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-slate-900">{spouse.name}</p>
+                                  <p className="text-xs text-slate-600">
+                                    Born: {new Date(spouse.birth_date).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditMember(spouse)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
                         </div>
                       )}
 
-                      {/* Children Row */}
+                      {/* Children */}
                       {children.length > 0 && (
-                        <div className="grid grid-cols-1 gap-3">
-                          {children.map((child) => (
-                            <FamilyMemberNode
-                              key={child.id}
-                              member={child as any}
-                              onEdit={() => {}}
-                              onDelete={() => {}}
-                              level={1}
-                              viewOnly={true}
-                            />
-                          ))}
+                        <div>
+                          <h5 className="text-sm font-medium text-slate-700 mb-2">
+                            Children ({children.length})
+                          </h5>
+                          <div className="space-y-2">
+                            {children.map((child) => (
+                              <Card key={child.id} className="bg-slate-50">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="font-medium text-slate-900">{child.name}</p>
+                                      <p className="text-xs text-slate-600">
+                                        Born: {new Date(child.birth_date).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditMember(child)}
+                                        className="h-6 w-6 p-0"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {children.length === 0 && !spouse && (
+                        <div className="text-center py-4 text-slate-500">
+                          <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">No family members added yet</p>
                         </div>
                       )}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
-              </div>
-            );
-          })}
+              </CardContent>
+            </Card>
+          );
+        })}
 
-        {familyTrees.filter(tree => {
-          const headMember = tree.members.find(m => m.id === tree.headId);
-          return headMember?.gender === 'male';
-        }).length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-              <UserPlus className="w-8 h-8 text-muted-foreground" />
+        {familyHeads.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full gradient-soft-bg flex items-center justify-center">
+              <Crown className="w-10 h-10 text-blue-600" />
             </div>
-            <h3 className="text-lg font-medium mb-2">No Male Family Heads</h3>
-            <p className="text-muted-foreground mb-4 text-sm px-4">
-              Add your first male family head to start building the family tree.
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">No Family Heads</h3>
+            <p className="text-slate-600 mb-8 max-w-md mx-auto">
+              Add your first family head to start organizing your family tree.
             </p>
-            <Button onClick={() => setShowForm(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add First Male Head
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="gradient-bg hover:opacity-90 transition-opacity shadow-elegant gap-2"
+            >
+              <Crown className="w-4 h-4" />
+              Add First Head
             </Button>
           </div>
         )}
@@ -239,8 +322,10 @@ export const FamilyTreeView = ({
         onCancel={() => {
           setShowForm(false);
           setEditingMember(null);
+          setExpandingFromHead(null);
         }}
         isVisible={showForm}
+        existingMembers={familyMembers}
       />
     </div>
   );
