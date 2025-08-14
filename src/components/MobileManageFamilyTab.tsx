@@ -23,40 +23,46 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
 
 
   const handleSaveMember = async (memberData: FamilyMember) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save family members.",
+        variant: "destructive"
+      });
+      throw new Error("Authentication required");
+    }
+
     try {
+      console.log('Received member data:', memberData);
       
-      // Prepare data for Supabase - remove empty id field for new members
+      // Prepare data for Supabase with proper null handling
       const dataToSave: any = {
-        user_id: user?.id || null,
+        user_id: user.id,
         name: memberData.name.trim(),
         birth_date: memberData.birth_date,
         is_deceased: Boolean(memberData.is_deceased),
         is_head: Boolean(memberData.is_head),
         death_date: memberData.is_deceased && memberData.death_date ? memberData.death_date : null,
-        parent_id: memberData.parent_id && memberData.parent_id !== '' && memberData.parent_id !== 'new' ? memberData.parent_id : null,
-        spouse_id: memberData.spouse_id && memberData.spouse_id !== '' && memberData.spouse_id !== 'new' ? memberData.spouse_id : null,
-        marriage_date: memberData.marriage_date && memberData.marriage_date !== '' ? memberData.marriage_date : null,
-        picture_url: memberData.picture_url && memberData.picture_url !== '' ? memberData.picture_url : null,
-        photo_url: memberData.photo_url && memberData.photo_url !== '' ? memberData.photo_url : null,
+        parent_id: memberData.parent_id || null,
+        spouse_id: memberData.spouse_id || null,
+        marriage_date: memberData.marriage_date || null,
+        picture_url: memberData.picture_url || null,
+        photo_url: memberData.photo_url || null,
         gender: memberData.gender || 'male',
         relation: memberData.relation || 'head',
-        profession: memberData.profession && memberData.profession !== '' ? memberData.profession : null,
-        residence: memberData.residence && memberData.residence !== '' ? memberData.residence : null,
-        hometown: memberData.hometown && memberData.hometown !== '' ? memberData.hometown : null,
-        ethnic: memberData.ethnic && memberData.ethnic !== '' ? memberData.ethnic : null,
-        nationality: memberData.nationality && memberData.nationality !== '' ? memberData.nationality : null,
-        note: memberData.note && memberData.note !== '' ? memberData.note : null
+        profession: memberData.profession || null,
+        residence: memberData.residence || null,
+        hometown: memberData.hometown || null,
+        ethnic: memberData.ethnic || null,
+        nationality: memberData.nationality || null,
+        note: memberData.note || null
       };
 
-      // Don't include id field for new members - let database generate it
-      if (editingMember?.id) {
-        dataToSave.id = editingMember.id;
-      }
-
-      console.log('Saving family member data:', dataToSave);
+      console.log('Prepared data for Supabase:', dataToSave);
 
       if (editingMember?.id) {
         // Update existing member
+        console.log('Updating existing member with ID:', editingMember.id);
         const { data, error } = await supabase
           .from('family_members')
           .update(dataToSave)
@@ -66,9 +72,10 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
 
         if (error) {
           console.error('Update error:', error);
-          throw error;
+          throw new Error(error.message || 'Failed to update member');
         }
         
+        console.log('Updated member data:', data);
         updateMember({
           ...data,
           gender: data.gender as 'male' | 'female'
@@ -79,21 +86,20 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
           description: `${memberData.name}'s information has been updated.`,
         });
       } else {
-        // Add new member - don't include id in insert
-        const insertData = { ...dataToSave };
-        delete insertData.id; // Remove id field entirely for new inserts
-        
+        // Add new member
+        console.log('Adding new member');
         const { data, error } = await supabase
           .from('family_members')
-          .insert([insertData])
+          .insert([dataToSave])
           .select()
           .single();
 
         if (error) {
           console.error('Insert error:', error);
-          throw error;
+          throw new Error(error.message || 'Failed to add member');
         }
         
+        console.log('Added member data:', data);
         addMember({
           ...data,
           gender: data.gender as 'male' | 'female'
@@ -109,9 +115,10 @@ export const MobileManageFamilyTab = ({ onUpdateFamilyTrees }: MobileManageFamil
       setEditingMember(null);
     } catch (error) {
       console.error('Error saving family member:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to save family member. Please try again.";
       toast({
-        title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to save family member. Please try again.",
+        title: "Save Failed", 
+        description: errorMessage,
         variant: "destructive"
       });
       throw error; // Re-throw to let form handle it

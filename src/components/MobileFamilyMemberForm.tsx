@@ -130,10 +130,20 @@ export const MobileFamilyMemberForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.birth_date) {
+    // Basic validation
+    if (!formData.name.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Name and birth date are required.",
+        title: "Name Required",
+        description: "Please enter a name for the family member.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.birth_date) {
+      toast({
+        title: "Birth Date Required", 
+        description: "Please select a birth date.",
         variant: "destructive"
       });
       return;
@@ -141,7 +151,7 @@ export const MobileFamilyMemberForm = ({
 
     if (formData.is_deceased && !formData.death_date) {
       toast({
-        title: "Missing Death Date",
+        title: "Death Date Required",
         description: "Please provide death date for deceased members.",
         variant: "destructive"
       });
@@ -151,50 +161,75 @@ export const MobileFamilyMemberForm = ({
     setIsLoading(true);
     
     try {
-      const updatedMember: FamilyMember = {
-        ...formData,
+      // Clean the data before saving
+      const cleanedData: FamilyMember = {
+        name: formData.name.trim(),
+        gender: formData.gender,
+        birth_date: formData.birth_date,
+        is_deceased: Boolean(formData.is_deceased),
+        death_date: formData.is_deceased && formData.death_date ? formData.death_date : undefined,
+        relation: formData.relation || 'head',
+        parent_id: formData.parent_id && formData.parent_id !== '' && formData.parent_id !== 'new' ? formData.parent_id : undefined,
+        spouse_id: formData.spouse_id && formData.spouse_id !== '' && formData.spouse_id !== 'new' ? formData.spouse_id : undefined,
         is_head: formData.relation === 'head' || formData.relation?.includes('head'),
-        death_date: formData.is_deceased ? formData.death_date : undefined
+        photo_url: formData.photo_url || undefined,
+        marriage_date: formData.marriage_date && formData.marriage_date !== '' ? formData.marriage_date : undefined,
+        picture_url: formData.picture_url && formData.picture_url !== '' ? formData.picture_url : undefined,
+        profession: formData.profession && formData.profession.trim() !== '' ? formData.profession.trim() : undefined,
+        residence: formData.residence && formData.residence.trim() !== '' ? formData.residence.trim() : undefined,
+        hometown: formData.hometown && formData.hometown.trim() !== '' ? formData.hometown.trim() : undefined,
+        ethnic: formData.ethnic && formData.ethnic.trim() !== '' ? formData.ethnic.trim() : undefined,
+        nationality: formData.nationality && formData.nationality.trim() !== '' ? formData.nationality.trim() : undefined,
+        note: formData.note && formData.note.trim() !== '' ? formData.note.trim() : undefined
       };
+
+      // Include ID only for existing members
+      if (member?.id) {
+        cleanedData.id = member.id;
+      }
+
+      console.log('Submitting cleaned data:', cleanedData);
       
       // Call onSave and await it properly
-      await onSave(updatedMember);
+      await onSave(cleanedData);
       
       // Notify other tabs about the new member
       if (onMemberAdded && !member) {
-        onMemberAdded(updatedMember);
+        onMemberAdded(cleanedData);
       }
       
-      // Don't show success toast here - let the parent component handle it
-      // Reset form state
-      setFormData({
-        id: '',
-        name: '',
-        gender: 'male',
-        birth_date: '',
-        is_deceased: false,
-        death_date: '',
-        relation: 'head',
-        parent_id: '',
-        spouse_id: '',
-        is_head: false,
-        photo_url: '',
-        marriage_date: '',
-        picture_url: '',
-        profession: '',
-        residence: '',
-        hometown: '',
-        ethnic: '',
-        nationality: '',
-        note: ''
-      });
-      setRelationStep('relation');
-      setSelectedRelationType('');
+      // Reset form state only if it's a new member
+      if (!member) {
+        setFormData({
+          id: '',
+          name: '',
+          gender: 'male',
+          birth_date: '',
+          is_deceased: false,
+          death_date: '',
+          relation: 'head',
+          parent_id: '',
+          spouse_id: '',
+          is_head: false,
+          photo_url: '',
+          marriage_date: '',
+          picture_url: '',
+          profession: '',
+          residence: '',
+          hometown: '',
+          ethnic: '',
+          nationality: '',
+          note: ''
+        });
+        setRelationStep('relation');
+        setSelectedRelationType('');
+        setActiveTab('information');
+      }
     } catch (error) {
       console.error('Form submission error:', error);
       toast({
-        title: "Error",
-        description: "Failed to save family member. Please try again.",
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save family member. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -205,8 +240,8 @@ export const MobileFamilyMemberForm = ({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <Card className="w-full max-w-lg h-[90vh] shadow-elegant border-0 bg-gradient-to-br from-white to-slate-50 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 safe-area-inset">
+      <Card className="w-full max-w-lg max-h-[95vh] shadow-elegant border-0 bg-gradient-to-br from-white to-slate-50 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
@@ -229,7 +264,7 @@ export const MobileFamilyMemberForm = ({
         <CardContent className="flex-1 overflow-hidden p-0">
           <form onSubmit={handleSubmit} className="h-full flex flex-col">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 h-12 mx-6 mt-4">
+              <TabsList className="grid w-full grid-cols-3 h-12 mx-4 sm:mx-6 mt-4">
                 <TabsTrigger value="information" className="flex items-center gap-1 text-xs">
                   <Info className="w-3 h-3" />
                   Information
@@ -244,7 +279,7 @@ export const MobileFamilyMemberForm = ({
                 </TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                 <TabsContent value="information" className="space-y-5 mt-0">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-slate-700">
