@@ -241,7 +241,7 @@ export const MobileFamilyMemberForm = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 safe-area-inset">
-      <Card className="w-full max-w-lg max-h-[95vh] shadow-elegant border-0 bg-gradient-to-br from-white to-slate-50 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 flex flex-col">
+      <Card className="w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] shadow-elegant border-0 bg-gradient-to-br from-white to-slate-50 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 flex flex-col overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
@@ -261,9 +261,9 @@ export const MobileFamilyMemberForm = ({
           </Button>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-hidden p-0">
-          <form onSubmit={handleSubmit} className="h-full flex flex-col">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <CardContent className="flex-1 overflow-hidden p-0 flex flex-col min-h-0">
+          <form onSubmit={handleSubmit} className="h-full flex flex-col min-h-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               <TabsList className="grid w-full grid-cols-3 h-12 mx-4 sm:mx-6 mt-4">
                 <TabsTrigger value="information" className="flex items-center gap-1 text-xs">
                   <Info className="w-3 h-3" />
@@ -279,7 +279,7 @@ export const MobileFamilyMemberForm = ({
                 </TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
                 <TabsContent value="information" className="space-y-5 mt-0">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-slate-700">
