@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FamilyTree, FamilyMember as OldFamilyMember } from "@/types/family";
 import { FamilyHeadCard } from "./FamilyHeadCard";
@@ -10,6 +11,8 @@ import { Plus, UserPlus, Users, Heart, Edit, Trash2, User, Crown } from "lucide-
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useFamilyContext, FamilyMember } from "@/contexts/FamilyContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FamilyTreeViewProps {
   familyTrees: FamilyTree[];
@@ -24,10 +27,11 @@ export const FamilyTreeView = ({
   const [showForm, setShowForm] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [expandingFromHead, setExpandingFromHead] = useState<FamilyMember | null>(null);
-  const { familyMembers, updateMember, deleteMember } = useFamilyContext();
+  const { familyMembers, updateMember, deleteMember, fetchFamilyMembers, addMember } = useFamilyContext();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  // Get family heads from context (members with head relation)
+  // Get family heads from context (members with head relation or is_head flag)
   const familyHeads = familyMembers.filter(member => 
     member.relation?.includes('head') || member.is_head
   );
@@ -57,12 +61,22 @@ export const FamilyTreeView = ({
 
   const handleDeleteMember = async (memberId: string) => {
     try {
-      await deleteMember(memberId);
+      const { error } = await supabase
+        .from('family_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      deleteMember(memberId);
       toast({
         title: "Member Deleted",
         description: "Family member has been removed.",
         variant: "destructive",
       });
+      
+      // Refresh data to ensure cross-tab visibility
+      await fetchFamilyMembers();
     } catch (error) {
       toast({
         title: "Error",
@@ -78,9 +92,61 @@ export const FamilyTreeView = ({
   };
 
   const handleSaveMember = async (memberData: FamilyMember): Promise<void> => {
-    // This will be handled by the parent component's save logic
-    // The form will call the MobileManageFamilyTab's handleSaveMember
-    return Promise.resolve();
+    try {
+      const cleanedData = {
+        ...memberData,
+        user_id: user?.id,
+        is_head: memberData.relation === 'head' || memberData.relation?.includes('head') || memberData.is_head
+      };
+
+      if (memberData.id) {
+        // Update existing member
+        const { data, error } = await supabase
+          .from('family_members')
+          .update(cleanedData)
+          .eq('id', memberData.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        updateMember(data);
+        toast({
+          title: "Member Updated",
+          description: `${memberData.name} has been updated successfully.`,
+        });
+      } else {
+        // Add new member
+        const { data, error } = await supabase
+          .from('family_members')
+          .insert([cleanedData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        addMember(data);
+        toast({
+          title: "Member Added", 
+          description: `${memberData.name} has been added to your family tree.`,
+        });
+      }
+
+      setShowForm(false);
+      setEditingMember(null);
+      setExpandingFromHead(null);
+      
+      // Refresh data to ensure cross-tab visibility
+      await fetchFamilyMembers();
+    } catch (error: any) {
+      console.error('Save member error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save family member. Please try again.",
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const handleAddFamilyMember = (headMember: FamilyMember, relationType: 'spouse' | 'child') => {
@@ -158,7 +224,7 @@ export const FamilyTreeView = ({
                       </div>
                     </div>
                     
-                    <div className="text-sm text-slate-600 mb-3">
+                    <div className="text-sm text-slate-600 mb-3 max-h-16 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300">
                       <p>Born: {new Date(headMember.birth_date).toLocaleDateString()}</p>
                       {headMember.profession && <p>Profession: {headMember.profession}</p>}
                       {headMember.residence && <p>Lives in: {headMember.residence}</p>}
@@ -223,7 +289,7 @@ export const FamilyTreeView = ({
                         <div className="mb-4">
                           <h5 className="text-sm font-medium text-slate-700 mb-2">Spouse</h5>
                           <Card className="bg-slate-50">
-                            <CardContent className="p-3">
+                            <CardContent className="p-3 max-h-20 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300">
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-medium text-slate-900">{spouse.name}</p>
@@ -253,7 +319,7 @@ export const FamilyTreeView = ({
                           <h5 className="text-sm font-medium text-slate-700 mb-2">
                             Children ({children.length})
                           </h5>
-                          <div className="space-y-2">
+                          <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300">
                             {children.map((child) => (
                               <Card key={child.id} className="bg-slate-50">
                                 <CardContent className="p-3">
@@ -326,6 +392,10 @@ export const FamilyTreeView = ({
         }}
         isVisible={showForm}
         existingMembers={familyMembers}
+        onMemberAdded={(member) => {
+          // Refresh all data when a new member is added to ensure cross-tab visibility
+          fetchFamilyMembers();
+        }}
       />
     </div>
   );

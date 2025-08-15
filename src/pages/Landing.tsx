@@ -7,23 +7,27 @@ import { TreePine, Users, Heart, ArrowRight, Smartphone } from 'lucide-react';
 
 const SplashScreen: React.FC = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-primary/60">
-      <div className="text-center space-y-6 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/70">
+      <div className="text-center space-y-8 p-8">
         <div className="relative">
-          <TreePine className="h-24 w-24 mx-auto text-white animate-pulse" />
+          <div className="w-32 h-32 mx-auto rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
+            <TreePine className="h-16 w-16 text-white animate-bounce" />
+          </div>
           <div className="absolute -top-2 -right-2">
-            <Heart className="h-8 w-8 text-red-300 animate-bounce" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center animate-spin">
+              <Heart className="h-4 w-4 text-white" />
+            </div>
           </div>
         </div>
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">Kindred</h1>
-          <p className="text-xl text-white/90">Card Chronicle</p>
-          <p className="text-sm text-white/70">Connecting families across generations</p>
+        <div className="space-y-3">
+          <h1 className="text-5xl font-bold text-white animate-fade-in">Kindred</h1>
+          <p className="text-2xl text-white/90 animate-fade-in">Card Chronicle</p>
+          <p className="text-sm text-white/80 animate-fade-in">Connecting families across generations</p>
         </div>
-        <div className="flex justify-center space-x-1">
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-100"></div>
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse delay-200"></div>
+        <div className="flex justify-center space-x-2">
+          <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce"></div>
+          <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+          <div className="w-3 h-3 bg-white/80 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
         </div>
       </div>
     </div>
